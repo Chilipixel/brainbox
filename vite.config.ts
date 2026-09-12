@@ -11,12 +11,12 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
+      includeAssets: ['favicon.png', 'apple-touch-icon.png'],
       manifest: {
         lang: 'de',
-        name: 'Sinnvoll – Aufgaben, die jetzt passen',
-        short_name: 'Sinnvoll',
-        description: 'Local-first Aufgabenplanung nach Dringlichkeit, Dauer und Kategorie.',
+        name: 'Brainbox – Ideen festhalten und sortieren',
+        short_name: 'Brainbox',
+        description: 'Ein Ort für alles, was in deinem Kopf passiert.',
         theme_color: '#f7f8fb',
         background_color: '#f7f8fb',
         display: 'standalone',

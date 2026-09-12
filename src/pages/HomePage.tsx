@@ -92,7 +92,7 @@ export function HomePage() {
   }
 
   return <>
-    <PageHeader title="Sinnvoll" />
+    <PageHeader title="Brainbox" />
     <main className="page home-page">
       <div className="home-config-bar"><span>{widgets.filter((item) => item.visible).length} Bereiche sichtbar</span><button onClick={() => setCustomizing((value) => !value)} aria-expanded={customizing}><SlidersHorizontal /> Startseite anpassen</button></div>
       {customizing && <section className="widget-editor" aria-label="Startseite anpassen"><div className="widget-editor-title"><strong>Bereiche anordnen</strong><button onClick={() => setCustomizing(false)} aria-label="Anpassung schließen"><X /></button></div>

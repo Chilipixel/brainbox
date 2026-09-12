@@ -14,7 +14,7 @@ export function SettingsPage() {
   function applyTheme(next: Theme) { setTheme(next); localStorage.setItem('theme', next); document.documentElement.dataset.theme = next }
   function exportData() {
     const blob = new Blob([JSON.stringify(createBackup(tasks, categories), null, 2)], { type: 'application/json' })
-    const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.download = `sinnvoll-backup-${new Date().toISOString().slice(0,10)}.json`; link.click(); URL.revokeObjectURL(url)
+    const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.download = `brainbox-backup-${new Date().toISOString().slice(0,10)}.json`; link.click(); URL.revokeObjectURL(url)
   }
   async function readImport(file?: File) {
     if (!file) return
@@ -28,6 +28,6 @@ export function SettingsPage() {
   return <><PageHeader title="Einstellungen" back />
     <main className="page settings-page"><section><span className="eyebrow">Darstellung</span><h2>Dein Modus</h2><div className="theme-options"><button className={theme === 'system' ? 'active' : ''} onClick={() => applyTheme('system')}><RefreshCcw />Automatisch</button><button className={theme === 'light' ? 'active' : ''} onClick={() => applyTheme('light')}><Sun />Hell</button><button className={theme === 'dark' ? 'active' : ''} onClick={() => applyTheme('dark')}><Moon />Dunkel</button></div></section>
       <section><span className="eyebrow">Datensicherung</span><h2>Deine Daten bleiben bei dir</h2><p className="settings-copy">Aufgaben und Kategorien werden lokal auf diesem Gerät gespeichert. Ein Backup kannst du jederzeit mitnehmen.</p><div className="settings-actions"><button onClick={exportData}><Download />Daten exportieren<span>JSON-Backup herunterladen</span></button><button onClick={() => input.current?.click()}><Upload />Daten importieren<span>Backup wiederherstellen</span></button></div><input ref={input} hidden type="file" accept="application/json" onChange={(e) => readImport(e.target.files?.[0])} />{message && <p className="status-message" role="status">{message}</p>}</section>
-      <section className="about-card"><div className="brand-mark">S</div><div><strong>Sinnvoll</strong><span>Version 1.0 · Local-first PWA</span></div></section>
+      <section className="about-card"><img className="brand-mark" src={`${import.meta.env.BASE_URL}pwa-192x192.png`} alt="" /><div><strong>Brainbox</strong><span>Version 1.0 · Local-first PWA</span></div></section>
     </main></>
 }

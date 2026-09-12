@@ -10,13 +10,13 @@ export function useWebMcp() {
     const lifecycle = new AbortController()
     const register = async () => {
       await context.registerTool({
-        name: 'list_open_tasks', title: 'Offene Aufgaben auflisten', description: 'Liest die offenen Aufgaben aus Sinnvoll.',
+        name: 'list_open_tasks', title: 'Offene Aufgaben auflisten', description: 'Liest die offenen Aufgaben aus Brainbox.',
         inputSchema: { type: 'object', properties: {}, additionalProperties: false },
         annotations: { readOnlyHint: true, untrustedContentHint: true },
         execute: () => tasks.filter((task) => task.status === 'open').map((task) => ({ id: task.id, title: task.title, urgency: task.urgency, duration: task.duration }))
       }, { signal: lifecycle.signal })
       await context.registerTool({
-        name: 'create_task', title: 'Aufgabe erstellen', description: 'Erstellt eine neue offene Aufgabe in Sinnvoll.',
+        name: 'create_task', title: 'Aufgabe erstellen', description: 'Erstellt eine neue offene Aufgabe in Brainbox.',
         inputSchema: { type: 'object', properties: { title: { type: 'string' }, categoryId: { type: 'string' }, urgency: { type: 'string', enum: ['urgent','normal','someday'] }, duration: { type: 'string', enum: ['short','medium','long'] } }, required: ['title','categoryId','urgency','duration'], additionalProperties: false },
         annotations: { readOnlyHint: false, untrustedContentHint: true },
         execute: async (raw: unknown) => {

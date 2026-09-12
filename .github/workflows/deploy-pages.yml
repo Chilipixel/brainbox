@@ -1,4 +1,4 @@
-name: Deploy Sinnvoll to GitHub Pages
+name: Deploy Brainbox to GitHub Pages
 
 on:
   push:

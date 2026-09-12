@@ -1,4 +1,4 @@
-# Sinnvoll
+# Brainbox
 
 Eine mobile-first, installierbare To-do-PWA, die Aufgaben nach Dringlichkeit, Dauer und Kategorie organisiert. Die App ist local-first: Für Version 1 sind weder Konto noch Server nötig.
 
