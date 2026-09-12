@@ -1,0 +1,14 @@
+node_modules/
+dist/
+dev-dist/
+.sites-runtime/
+coverage/
+*.tsbuildinfo
+vite.config.js
+vite.config.d.ts
+vitest.config.js
+vitest.config.d.ts
+.DS_Store
+.env
+.env.*
+!.env.example

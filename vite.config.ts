@@ -1,0 +1,40 @@
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import { VitePWA } from 'vite-plugin-pwa'
+
+const repositoryName = process.env.GITHUB_REPOSITORY?.split('/')[1]
+const base = process.env.GITHUB_ACTIONS === 'true' && repositoryName ? `/${repositoryName}/` : '/'
+
+export default defineConfig({
+  base,
+  plugins: [
+    react(),
+    VitePWA({
+      registerType: 'autoUpdate',
+      includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
+      manifest: {
+        lang: 'de',
+        name: 'Sinnvoll – Aufgaben, die jetzt passen',
+        short_name: 'Sinnvoll',
+        description: 'Local-first Aufgabenplanung nach Dringlichkeit, Dauer und Kategorie.',
+        theme_color: '#f7f8fb',
+        background_color: '#f7f8fb',
+        display: 'standalone',
+        start_url: './#/',
+        scope: './',
+        orientation: 'portrait-primary',
+        icons: [
+          { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' },
+          { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png' },
+          { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }
+        ]
+      },
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        navigateFallback: `${base}index.html`,
+        cleanupOutdatedCaches: true
+      },
+      devOptions: { enabled: true }
+    })
+  ]
+})
