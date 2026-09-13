@@ -11,7 +11,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.png', 'apple-touch-icon.png', 'brainbox-icon-dark-192.png'],
+      includeAssets: ['favicon.png', 'apple-touch-icon.png', 'brainbox-mark-light-192.png', 'brainbox-mark-dark-192.png'],
       manifest: {
         lang: 'de',
         name: 'Brainbox – Ideen festhalten und sortieren',
