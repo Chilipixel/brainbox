@@ -15,7 +15,7 @@ export function RandomPage() {
   const navigate = useNavigate()
   const location = useLocation()
   const initialMode = (location.state as { mode?: RandomMode } | null)?.mode ?? 'any'
-  const [minutes, setMinutes] = useState(30)
+  const [minutes, setMinutes] = useState(60)
   const [mode, setMode] = useState<RandomMode>(initialMode)
   const [energyLevel, setEnergyLevel] = useState<EnergyLevel>('medium')
   const [result, setResult] = useState<Task | undefined>()
@@ -26,7 +26,7 @@ export function RandomPage() {
   return <><PageHeader title="Zufall" />
     <main className="page random-page"><div className="random-intro"><div className="random-symbol"><Shuffle /></div><span className="eyebrow">Entscheidungshilfe</span><h2>Was soll ich machen?</h2><p>Lass dich von einer Aufgabe inspirieren, die gerade in deinen Tag passt.</p></div>
       {!searched ? <div className="random-controls">
-        <fieldset><legend>Wie viel Zeit hast du?</legend><div className="segment-grid">{[[5,'5 Min.'],[15,'15 Min.'],[30,'30 Min.'],[60,'1 Std.+']].map(([value, label]) => <button type="button" key={value} className={minutes === value ? 'active' : ''} onClick={() => setMinutes(Number(value))}><Clock3 />{label}</button>)}</div></fieldset>
+        <fieldset><legend>Wie viel Zeit hast du?</legend><div className="random-time-grid">{[[15,'Max. 15 Min.','Kurze Aufgaben'],[60,'Max. 60 Min.','Kurze und mittlere'],[Number.POSITIVE_INFINITY,'Über 60 Min.','Alle Aufgaben']].map(([value, label, detail]) => <button type="button" key={String(value)} className={minutes === value ? 'active' : ''} onClick={() => setMinutes(Number(value))}><Clock3 /><strong>{label}</strong><small>{detail}</small></button>)}</div></fieldset>
         <fieldset><legend>Wie viel Energie hast du gerade?</legend><div className="random-energy-grid">{([['low','Wenig',BatteryLow],['medium','Mittel',BatteryMedium],['high','Viel',BatteryFull]] as const).map(([value, label, Icon]) => <button type="button" key={value} className={energyLevel === value ? 'active' : ''} onClick={() => setEnergyLevel(value)} aria-pressed={energyLevel === value}><Icon />{label}</button>)}</div></fieldset>
         <fieldset><legend>Was für eine Aufgabe?</legend><div className="mode-grid">{([['any','Egal','Alles, was passt'],['important','Wichtig','Prioritäten zuerst'],['boredom','Langeweile','Ideen ohne Druck']] as const).map(([value, label, text]) => <button type="button" key={value} className={mode === value ? 'active' : ''} onClick={() => setMode(value)}><strong>{label}</strong><small>{text}</small></button>)}</div></fieldset>
         <button className="primary-button random-action" onClick={roll}><Sparkles /> Zufällige Aufgabe anzeigen</button>

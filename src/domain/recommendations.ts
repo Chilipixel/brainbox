@@ -22,6 +22,11 @@ export function getBoredomTasks(tasks: Task[]) {
   return open(tasks).filter((task) => task.urgency === 'someday').sort((a, b) => taskMinutes(a) - taskMinutes(b))
 }
 
+export function getTasksForRandomTime(tasks: Task[], maxMinutes: number) {
+  const candidates = open(tasks)
+  return Number.isFinite(maxMinutes) ? candidates.filter((task) => taskMinutes(task) <= maxMinutes) : candidates
+}
+
 export type RandomMode = 'any' | 'important' | 'boredom'
 
 export function filterTasksByAvailableEnergy(tasks: Task[], energyLevel?: EnergyLevel) {
@@ -35,7 +40,7 @@ export function filterTasksByAvailableEnergy(tasks: Task[], energyLevel?: Energy
 }
 
 export function getRandomTask(tasks: Task[], minutes: number, mode: RandomMode, energyLevel?: EnergyLevel, excludeId?: string, random = Math.random) {
-  let candidates = getTasksForAvailableTime(tasks, minutes)
+  let candidates = getTasksForRandomTime(tasks, minutes)
   if (excludeId && candidates.length > 1) candidates = candidates.filter((task) => task.id !== excludeId)
   if (mode === 'boredom') {
     const someday = candidates.filter((task) => task.urgency === 'someday')
