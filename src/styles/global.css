@@ -42,7 +42,7 @@ html[data-theme='dark'] .brand-mark-dark { display:block!important }
 .welcome { padding:16px 4px 4px }
 .welcome span { color:var(--muted); font-size:1rem }
 .welcome h2, .page-title-row h2, .random-intro h2 { margin:5px 0 0; font-size:2rem; line-height:1.1; letter-spacing:-.045em }
-.welcome-message { margin:12px 0 0; color:var(--accent); font-size:.92rem; line-height:1.45; font-weight:600 }
+.daily-quote { max-width:42rem; margin:14px 0 0; color:var(--muted); font-size:.96rem; line-height:1.55; overflow-wrap:anywhere }
 .recommendation { width:100%; min-height:98px; border:0; padding:17px; border-radius:24px; background:var(--surface); display:grid; grid-template-columns:52px 1fr 26px; align-items:center; text-align:left; box-shadow:var(--shadow) }
 .recommendation > svg { width:20px; color:var(--muted) }
 .recommendation-icon { width:48px; height:48px; display:grid; place-items:center; border-radius:16px }

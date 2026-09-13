@@ -2,6 +2,7 @@ import { ArrowDown, ArrowRight, ArrowUp, CalendarDays, CheckCircle2, CircleDot, 
 import { useEffect, useState, type ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { EmptyState } from '../components/EmptyState'
+import { DailyQuote } from '../components/DailyQuote'
 import { PageHeader } from '../components/PageHeader'
 import { formatDuration } from '../domain/labels'
 import { getBestTaskNow, getBoredomTasks, getTasksForAvailableTime } from '../domain/recommendations'
@@ -31,21 +32,6 @@ function greeting() {
   return hour < 11 ? 'Guten Morgen' : hour < 18 ? 'Hallo' : 'Guten Abend'
 }
 
-const encouragements = [
-  'Du bist gut, so wie du bist.',
-  'Heute darf es auch leicht sein.',
-  'Man darf auch mal faul sein.',
-  'Kleine Schritte zählen genauso.',
-  'Nimm dir die Zeit, die du brauchst.',
-  'Ich hoffe, du hast heute einen schönen Tag.',
-  'Du musst heute nicht alles schaffen.'
-]
-
-function dailyEncouragement(date: Date) {
-  const localDay = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime()
-  return encouragements[Math.floor(localDay / 86_400_000) % encouragements.length]
-}
-
 function dateKey(date: Date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
 }
@@ -64,7 +50,6 @@ export function HomePage() {
   const category = (id?: string) => categories.find((item) => item.id === id)
   const today = new Date()
   const userName = localStorage.getItem('user-name')?.trim()
-  const encouragement = dailyEncouragement(today)
   const todayKey = dateKey(today)
   const dayUntilSunday = (7 - today.getDay()) % 7
   const weekEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate() + dayUntilSunday)
@@ -84,7 +69,7 @@ export function HomePage() {
   ) : <EmptyState title="Alles erledigt" text="Lege eine Aufgabe an, wenn dir etwas einfällt." />
 
   const content: Record<WidgetId, ReactNode> = {
-    welcome: <section className="welcome"><span>{greeting()}{userName ? `, ${userName}` : ''}</span><h2>Was möchtest du heute angehen?</h2>{encouragement && <p className="welcome-message">{encouragement}</p>}</section>,
+    welcome: <section className="welcome"><span>{greeting()}{userName ? `, ${userName}` : ''}</span><h2>Was möchtest du heute angehen?</h2><DailyQuote /></section>,
     now: <section><div className="section-heading"><span>Jetzt sinnvoll</span><CircleDot /></div><Recommendation task={best} tone="red" /></section>,
     thirty: <section><div className="section-heading"><span>Wenn du 30 Minuten hast</span><Clock3 /></div><Recommendation task={thirty} tone="orange" /></section>,
     week: <DueWidget title="Diese Woche fällig" tasks={dueThisWeek} categoryName={(id) => category(id)?.name} onOpen={(id) => navigate(`/task/${id}`)} />,
