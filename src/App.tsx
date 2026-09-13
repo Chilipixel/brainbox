@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { BottomNav } from './components/BottomNav'
 import { BrandMark } from './components/BrandMark'
+import { LegalFooter } from './components/LegalFooter'
 import { useAppData } from './hooks/useAppData'
 import { useWebMcp } from './hooks/useWebMcp'
 import { AllTasksPage } from './pages/AllTasksPage'
@@ -29,7 +30,7 @@ function App() {
     <Route path="/completed" element={<CompletedPage />} />
     <Route path="/settings" element={<SettingsPage />} />
     <Route path="*" element={<Navigate to="/" replace />} />
-  </Routes></div><BottomNav /></div>
+  </Routes><LegalFooter /></div><BottomNav /></div>
 }
 
 export default App
