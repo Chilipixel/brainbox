@@ -18,6 +18,8 @@ export interface Task {
   completedAt?: string
   status: TaskStatus
   notes?: string
+  /** Synchronisations-Metadaten; bei alten lokalen Datensätzen optional. */
+  sourceDeviceId?: string
 }
 
 export interface Category {
@@ -28,6 +30,19 @@ export interface Category {
   color: string
   createdAt: string
   sortOrder: number
+  /** Bei Datensätzen aus älteren App-Versionen noch nicht vorhanden. */
+  updatedAt?: string
+  sourceDeviceId?: string
+}
+
+export interface SyncTombstone {
+  key: string
+  entityType: 'task' | 'category'
+  id: string
+  createdAt: string
+  updatedAt: string
+  deletedAt: string
+  sourceDeviceId: string
 }
 
 export interface QuickItem {

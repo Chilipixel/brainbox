@@ -1,11 +1,12 @@
 import Dexie, { type EntityTable } from 'dexie'
-import type { Category, QuickItem, Task } from '../types/models'
+import type { Category, QuickItem, SyncTombstone, Task } from '../types/models'
 import type { CategoryRepository, QuickItemRepository, TaskRepository } from './interfaces'
 
 export class SinnvollDatabase extends Dexie {
   tasks!: EntityTable<Task, 'id'>
   categories!: EntityTable<Category, 'id'>
   quickItems!: EntityTable<QuickItem, 'id'>
+  syncTombstones!: EntityTable<SyncTombstone, 'key'>
 
   constructor() {
     super('sinnvoll-db')
@@ -17,6 +18,12 @@ export class SinnvollDatabase extends Dexie {
       tasks: 'id, categoryId, urgency, duration, energyLevel, status, dueDate, createdAt, completedAt',
       categories: 'id, sortOrder, name',
       quickItems: 'id, createdAt'
+    })
+    this.version(3).stores({
+      tasks: 'id, categoryId, urgency, duration, energyLevel, status, dueDate, createdAt, completedAt',
+      categories: 'id, sortOrder, name',
+      quickItems: 'id, createdAt',
+      syncTombstones: 'key, entityType, id, updatedAt, deletedAt'
     })
   }
 }
