@@ -4,16 +4,17 @@ import { Link, useNavigate } from 'react-router-dom'
 import { EmptyState } from '../components/EmptyState'
 import { DailyQuote } from '../components/DailyQuote'
 import { PageHeader } from '../components/PageHeader'
-import { formatDuration } from '../domain/labels'
+import { QuickChecklist } from '../components/QuickChecklist'
+import { energyLabels, formatDuration } from '../domain/labels'
 import { getBestTaskNow, getBoredomTasks, getTasksForAvailableTime } from '../domain/recommendations'
 import { useAppData } from '../hooks/useAppData'
 import type { Task } from '../types/models'
 
-type WidgetId = 'welcome' | 'now' | 'thirty' | 'week' | 'month' | 'boredom' | 'overview'
+type WidgetId = 'welcome' | 'quick' | 'now' | 'thirty' | 'week' | 'month' | 'boredom' | 'overview'
 type WidgetPreference = { id: WidgetId, visible: boolean }
 
 const widgetLabels: Record<WidgetId, string> = {
-  welcome: 'Begrüßung', now: 'Jetzt sinnvoll', thirty: '30-Minuten-Empfehlung',
+  welcome: 'Begrüßung', quick: 'Kurze Checkliste', now: 'Jetzt sinnvoll', thirty: '30-Minuten-Empfehlung',
   week: 'Diese Woche', month: 'Dieser Monat', boredom: 'Bei Langeweile', overview: 'Überblick'
 }
 const defaultWidgets: WidgetPreference[] = (Object.keys(widgetLabels) as WidgetId[]).map((id) => ({ id, visible: true }))
@@ -63,13 +64,14 @@ export function HomePage() {
   const Recommendation = ({ task, tone }: { task: typeof best, tone: string }) => task ? (
     <button className={`recommendation ${tone}`} onClick={() => navigate(`/task/${task.id}`)}>
       <div className="recommendation-icon"><Clock3 /></div>
-      <div><strong>{task.title}</strong><span>{category(task.categoryId)?.name} · {formatDuration(task.duration, task.estimatedMinutes)}</span></div>
+      <div><strong>{task.title}</strong><span>{category(task.categoryId)?.name} · {formatDuration(task.duration, task.estimatedMinutes)}{task.energyLevel ? ` · ${energyLabels[task.energyLevel]}` : ''}</span></div>
       <ArrowRight aria-hidden="true" />
     </button>
   ) : <EmptyState title="Alles erledigt" text="Lege eine Aufgabe an, wenn dir etwas einfällt." />
 
   const content: Record<WidgetId, ReactNode> = {
     welcome: <section className="welcome"><span>{greeting()}{userName ? `, ${userName}` : ''}</span><h2>Was möchtest du heute angehen?</h2><DailyQuote /></section>,
+    quick: <QuickChecklist />,
     now: <section><div className="section-heading"><span>Jetzt sinnvoll</span><CircleDot /></div><Recommendation task={best} tone="red" /></section>,
     thirty: <section><div className="section-heading"><span>Wenn du 30 Minuten hast</span><Clock3 /></div><Recommendation task={thirty} tone="orange" /></section>,
     week: <DueWidget title="Diese Woche fällig" tasks={dueThisWeek} categoryName={(id) => category(id)?.name} onOpen={(id) => navigate(`/task/${id}`)} />,

@@ -1,4 +1,4 @@
-import type { Task } from '../types/models'
+import type { EnergyLevel, Task } from '../types/models'
 import { compareByPriority, taskMinutes } from './ranking'
 
 const open = (tasks: Task[]) => tasks.filter((task) => task.status === 'open')
@@ -24,13 +24,24 @@ export function getBoredomTasks(tasks: Task[]) {
 
 export type RandomMode = 'any' | 'important' | 'boredom'
 
-export function getRandomTask(tasks: Task[], minutes: number, mode: RandomMode, excludeId?: string, random = Math.random) {
+export function filterTasksByAvailableEnergy(tasks: Task[], energyLevel?: EnergyLevel) {
+  if (!energyLevel) return tasks
+  const levels: EnergyLevel[] = energyLevel === 'low' ? ['low'] : energyLevel === 'medium' ? ['medium', 'low'] : ['high', 'medium', 'low']
+  for (const level of levels) {
+    const matching = tasks.filter((task) => task.energyLevel === level)
+    if (matching.length) return matching
+  }
+  return tasks.filter((task) => !task.energyLevel)
+}
+
+export function getRandomTask(tasks: Task[], minutes: number, mode: RandomMode, energyLevel?: EnergyLevel, excludeId?: string, random = Math.random) {
   let candidates = getTasksForAvailableTime(tasks, minutes)
   if (excludeId && candidates.length > 1) candidates = candidates.filter((task) => task.id !== excludeId)
   if (mode === 'boredom') {
     const someday = candidates.filter((task) => task.urgency === 'someday')
     if (someday.length) candidates = someday
   }
+  candidates = filterTasksByAvailableEnergy(candidates, energyLevel)
   if (!candidates.length) return undefined
   const weights = candidates.map((task) => {
     if (mode === 'boredom') return task.urgency === 'someday' ? 8 : 1

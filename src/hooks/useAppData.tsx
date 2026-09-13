@@ -1,20 +1,25 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import type { Category, Task } from '../types/models'
-import { categoryRepository, db, taskRepository } from '../repositories/localDatabase'
+import type { Category, QuickItem, Task } from '../types/models'
+import { categoryRepository, db, quickItemRepository, taskRepository } from '../repositories/localDatabase'
+import { createQuickItem, toggleQuickItemState } from '../domain/quickChecklist'
 import { seedDevelopmentData } from '../repositories/seed'
 
 interface AppData {
   tasks: Task[]
   categories: Category[]
+  quickItems: QuickItem[]
   ready: boolean
   saveTask(task: Task): Promise<void>
   deleteTask(id: string): Promise<void>
   toggleTask(id: string): Promise<void>
   saveCategory(category: Category): Promise<void>
   deleteCategory(id: string, moveTo?: string): Promise<void>
-  importData(tasks: Task[], categories: Category[]): Promise<void>
+  addQuickItem(text: string): Promise<void>
+  toggleQuickItem(id: string): Promise<void>
+  clearCompletedQuickItems(): Promise<void>
+  importData(tasks: Task[], categories: Category[], quickItems?: QuickItem[]): Promise<void>
 }
 
 const AppDataContext = createContext<AppData | null>(null)
@@ -24,9 +29,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => { seedDevelopmentData().finally(() => setSeeded(true)) }, [])
   const tasks = useLiveQuery(() => db.tasks.toArray(), [], [])
   const categories = useLiveQuery(() => db.categories.orderBy('sortOrder').toArray(), [], [])
+  const quickItems = useLiveQuery(() => db.quickItems.orderBy('createdAt').toArray(), [], [])
 
   const value = useMemo<AppData>(() => ({
-    tasks, categories, ready: seeded,
+    tasks, categories, quickItems, ready: seeded,
     saveTask: (task) => taskRepository.save(task),
     deleteTask: (id) => taskRepository.delete(id),
     toggleTask: async (id) => {
@@ -44,13 +50,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
         await db.categories.delete(id)
       })
     },
-    importData: async (nextTasks, nextCategories) => {
-      await db.transaction('rw', db.categories, db.tasks, async () => {
-        await db.tasks.clear(); await db.categories.clear()
-        await db.categories.bulkPut(nextCategories); await db.tasks.bulkPut(nextTasks)
+    addQuickItem: async (text) => {
+      const item = createQuickItem(text)
+      if (item) await quickItemRepository.save(item)
+    },
+    toggleQuickItem: async (id) => {
+      const item = await db.quickItems.get(id)
+      if (item) await quickItemRepository.save(toggleQuickItemState(item))
+    },
+    clearCompletedQuickItems: () => quickItemRepository.deleteCompleted(),
+    importData: async (nextTasks, nextCategories, nextQuickItems = []) => {
+      await db.transaction('rw', db.categories, db.tasks, db.quickItems, async () => {
+        await db.tasks.clear(); await db.categories.clear(); await db.quickItems.clear()
+        await db.categories.bulkPut(nextCategories); await db.tasks.bulkPut(nextTasks); await db.quickItems.bulkPut(nextQuickItems)
       })
     }
-  }), [tasks, categories, seeded])
+  }), [tasks, categories, quickItems, seeded])
 
   return <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>
 }

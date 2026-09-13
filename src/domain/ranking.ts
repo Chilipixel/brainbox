@@ -2,6 +2,7 @@ import type { Task } from '../types/models'
 import { durationFallbackMinutes } from './labels'
 
 const urgencyWeight = { urgent: 0, normal: 1, someday: 2 } as const
+const energyWeight = { low: 0, medium: 1, high: 2 } as const
 
 export function taskMinutes(task: Task): number {
   return task.estimatedMinutes ?? durationFallbackMinutes[task.duration]
@@ -32,6 +33,8 @@ export function sortTasks(tasks: Task[], mode: string, categoryName?: (id: strin
     case 'dueDate': return list.sort((a, b) => (a.dueDate ?? '9999').localeCompare(b.dueDate ?? '9999'))
     case 'createdAt': return list.sort((a, b) => b.createdAt.localeCompare(a.createdAt))
     case 'alphabetical': return list.sort((a, b) => a.title.localeCompare(b.title))
+    case 'energyAsc': return list.sort((a, b) => (a.energyLevel === undefined ? 3 : energyWeight[a.energyLevel]) - (b.energyLevel === undefined ? 3 : energyWeight[b.energyLevel]))
+    case 'energyDesc': return list.sort((a, b) => (a.energyLevel === undefined ? -1 : energyWeight[a.energyLevel]) - (b.energyLevel === undefined ? -1 : energyWeight[b.energyLevel])).reverse()
     default: return list.sort(compareByPriority)
   }
 }

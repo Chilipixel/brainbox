@@ -1,4 +1,4 @@
-import type { Duration, Urgency } from '../types/models'
+import type { Duration, EnergyLevel, Urgency } from '../types/models'
 
 export const urgencyLabels: Record<Urgency, string> = {
   urgent: 'Dringend', normal: 'Normal', someday: 'Irgendwann'
@@ -6,6 +6,10 @@ export const urgencyLabels: Record<Urgency, string> = {
 
 export const durationLabels: Record<Duration, string> = {
   short: 'Kurz', medium: 'Mittel', long: 'Lang'
+}
+
+export const energyLabels: Record<EnergyLevel, string> = {
+  low: 'Wenig Energie', medium: 'Mittlere Energie', high: 'Hohe Energie'
 }
 
 export const durationFallbackMinutes: Record<Duration, number> = {

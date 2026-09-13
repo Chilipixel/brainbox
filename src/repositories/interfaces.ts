@@ -1,4 +1,4 @@
-import type { Category, Task } from '../types/models'
+import type { Category, QuickItem, Task } from '../types/models'
 
 export interface TaskRepository {
   list(): Promise<Task[]>
@@ -12,4 +12,11 @@ export interface CategoryRepository {
   save(category: Category): Promise<void>
   delete(id: string): Promise<void>
   replaceAll(categories: Category[]): Promise<void>
+}
+
+export interface QuickItemRepository {
+  list(): Promise<QuickItem[]>
+  save(item: QuickItem): Promise<void>
+  deleteCompleted(): Promise<void>
+  replaceAll(items: QuickItem[]): Promise<void>
 }
