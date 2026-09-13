@@ -14,7 +14,7 @@ type WidgetId = 'welcome' | 'quick' | 'now' | 'thirty' | 'week' | 'month' | 'bor
 type WidgetPreference = { id: WidgetId, visible: boolean }
 
 const widgetLabels: Record<WidgetId, string> = {
-  welcome: 'Begrüßung', quick: 'Kurze Checkliste', now: 'Jetzt sinnvoll', thirty: '30-Minuten-Empfehlung',
+  welcome: 'Begrüßung', quick: 'Kurz notiert · Kleine Dinge', now: 'Jetzt sinnvoll', thirty: '30-Minuten-Empfehlung',
   week: 'Diese Woche', month: 'Dieser Monat', boredom: 'Bei Langeweile', overview: 'Überblick'
 }
 const defaultWidgets: WidgetPreference[] = (Object.keys(widgetLabels) as WidgetId[]).map((id) => ({ id, visible: true }))

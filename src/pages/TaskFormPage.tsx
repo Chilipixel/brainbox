@@ -1,8 +1,9 @@
-import { BatteryFull, BatteryLow, BatteryMedium, Check, ListPlus, Plus, X } from 'lucide-react'
+import { BatteryFull, BatteryLow, BatteryMedium, Check, ListPlus, Plus } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { PageHeader } from '../components/PageHeader'
 import { EmojiPicker } from '../components/EmojiPicker'
+import { CalendarField } from '../components/CalendarField'
 import { categoryEmoji } from '../domain/categoryDisplay'
 import { appendChecklistLine } from '../domain/noteChecklist'
 import { optionalDate, optionalEnergy } from '../domain/taskFields'
@@ -81,7 +82,7 @@ export function TaskFormPage() {
       </div></fieldset>
       <div className="two-fields">
         <label>Genauer <small>Minuten</small><input inputMode="numeric" min="1" type="number" value={minutes} onChange={(e) => setMinutes(e.target.value)} placeholder="z. B. 45" /></label>
-        <label>Fälligkeitsdatum <small>optional</small><span className="date-input-wrap"><input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />{dueDate && <button type="button" onClick={() => setDueDate('')} aria-label="Fälligkeitsdatum entfernen"><X /></button>}</span></label>
+        <label>Fälligkeitsdatum <small>optional</small><CalendarField value={dueDate} onChange={setDueDate} /></label>
       </div>
       <fieldset><legend>Kategorie</legend><div className="category-pills">
         {categories.map((category) => <button type="button" key={category.id} className={categoryId === category.id ? 'selected' : ''} onClick={() => setCategoryId(category.id)}><span style={{ background: category.color }} aria-hidden="true">{categoryEmoji(category) || '·'}</span>{category.name}{categoryId === category.id && <Check />}</button>)}
