@@ -1,9 +1,19 @@
 const colors = ['#a875ef', '#ee8db5', '#ffad65', '#ffd477', '#65b8ae', '#86b9ef']
 let clearActiveRain: (() => void) | undefined
 
+export function isConfettiEnabled() {
+  return localStorage.getItem('confetti-enabled') !== 'false'
+}
+
+export function setConfettiEnabled(enabled: boolean) {
+  localStorage.setItem('confetti-enabled', String(enabled))
+  if (!enabled) clearActiveRain?.()
+}
+
 /** A short, decorative celebration; never blocks the task controls. */
 export function celebrateTaskCompletion() {
   clearActiveRain?.()
+  if (!isConfettiEnabled()) return
   const motion = window.matchMedia('(prefers-reduced-motion: reduce)')
   if (motion.matches) return
 
