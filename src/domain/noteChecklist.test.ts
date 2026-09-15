@@ -12,9 +12,24 @@ describe('Checklisten in Aufgabennotizen', () => {
   })
   it('fügt einen neuen Checklistenpunkt hinzu', () => expect(appendChecklistLine('Notiz')).toBe('Notiz\n☐ '))
 
-  it('behält ohne Auswahl das bisherige Hinzufügen bei', () => {
-    expect(toggleChecklistSelection('Notiz', 2, 2)).toEqual({ value:'Notiz\n☐ ', selectionStart:8, selectionEnd:8 })
-    expect(toggleChecklistSelection('', 0, 0).value).toBe('☐ ')
+  it('wandelt ohne Markierung die Cursorzeile um und erhält die Cursorposition im Text', () => {
+    expect(toggleChecklistSelection('Notiz', 2, 2)).toEqual({ value:'☐ Notiz', selectionStart:4, selectionEnd:4 })
+    expect(toggleChecklistSelection('Milch\nPaket\nWerkzeug', 8, 8).value).toBe('Milch\n☐ Paket\nWerkzeug')
+  })
+  it('entfernt ohne Markierung auch abgehakte Checkboxen und erhält den Text', () => {
+    expect(toggleChecklistSelection('☑ Paket', 4, 4)).toEqual({ value:'Paket', selectionStart:2, selectionEnd:2 })
+    const next = toggleChecklistSelection('Paket', 2, 2)
+    expect(toggleChecklistSelection(next.value, next.selectionStart, next.selectionEnd).value).toBe('Paket')
+  })
+  it('erzeugt einen neuen Punkt in einer leeren Cursorzeile', () => {
+    expect(toggleChecklistSelection('', 0, 0)).toEqual({ value:'☐ ', selectionStart:2, selectionEnd:2 })
+    expect(toggleChecklistSelection('Milch\n\nPaket', 6, 6).value).toBe('Milch\n☐ \nPaket')
+    expect(toggleChecklistSelection('Milch\n', 6, 6).value).toBe('Milch\n☐ ')
+  })
+  it('behandelt den Cursor am Zeilenanfang und Zeilenende korrekt', () => {
+    expect(toggleChecklistSelection('Milch\nPaket', 6, 6).value).toBe('Milch\n☐ Paket')
+    expect(toggleChecklistSelection('Milch\nPaket', 5, 5).value).toBe('☐ Milch\nPaket')
+    expect(toggleChecklistSelection('\nPaket', 0, 0).value).toBe('☐ \nPaket')
   })
   it('wandelt eine vollständig markierte Zeile um', () => {
     expect(toggleChecklistSelection('Milch kaufen', 0, 12).value).toBe('☐ Milch kaufen')

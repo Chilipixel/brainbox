@@ -29,12 +29,22 @@ export function appendChecklistLine(value: string) {
 export function toggleChecklistSelection(value: string, start: number, end: number) {
   const from = Math.max(0, Math.min(value.length, Math.min(start, end)))
   const to = Math.max(from, Math.min(value.length, Math.max(start, end)))
+  const lineStart = from === 0 ? 0 : value.lastIndexOf('\n', from - 1) + 1
   if (from === to) {
-    const next = appendChecklistLine(value)
-    return { value: next, selectionStart: next.length, selectionEnd: next.length }
+    const nextNewline = value.indexOf('\n', from)
+    const lineEnd = nextNewline === -1 ? value.length : nextNewline
+    const line = value.slice(lineStart, lineEnd)
+    const match = line.match(checklistLine)
+    const replacement = match ? match[2] : `☐ ${line}`
+    const offset = match ? -(line.length - match[2].length) : 2
+    const cursor = Math.max(lineStart, Math.min(lineStart + replacement.length, from + offset))
+    return {
+      value: value.slice(0, lineStart) + replacement + value.slice(lineEnd),
+      selectionStart: cursor,
+      selectionEnd: cursor
+    }
   }
 
-  const lineStart = from === 0 ? 0 : value.lastIndexOf('\n', from - 1) + 1
   const nextNewline = value.indexOf('\n', to - 1)
   const lineEnd = nextNewline === -1 ? value.length : nextNewline
   const lines = value.slice(lineStart, lineEnd).split('\n')
