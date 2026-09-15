@@ -5,7 +5,7 @@ import { PageHeader } from '../components/PageHeader'
 import { EmojiPicker } from '../components/EmojiPicker'
 import { CalendarField } from '../components/CalendarField'
 import { categoryEmoji } from '../domain/categoryDisplay'
-import { appendChecklistLine } from '../domain/noteChecklist'
+import { toggleChecklistSelection } from '../domain/noteChecklist'
 import { optionalDate, optionalEnergy } from '../domain/taskFields'
 import { useAppData } from '../hooks/useAppData'
 import type { Duration, EnergyLevel, Urgency } from '../types/models'
@@ -31,6 +31,24 @@ export function TaskFormPage() {
   const [categoryName, setCategoryName] = useState('')
   const [categoryEmojiValue, setCategoryEmojiValue] = useState('')
   const descriptionInput = useRef<HTMLTextAreaElement>(null)
+  const descriptionSelection = useRef({ start: 0, end: 0 })
+
+  function rememberDescriptionSelection() {
+    const input = descriptionInput.current
+    if (input) descriptionSelection.current = { start: input.selectionStart, end: input.selectionEnd }
+  }
+
+  function toggleDescriptionChecklist() {
+    const { start, end } = descriptionSelection.current
+    const next = toggleChecklistSelection(description, start, end)
+    setDescription(next.value)
+    descriptionSelection.current = { start: next.selectionStart, end: next.selectionEnd }
+    requestAnimationFrame(() => {
+      const input = descriptionInput.current
+      input?.focus({ preventScroll: true })
+      input?.setSelectionRange(next.selectionStart, next.selectionEnd)
+    })
+  }
 
   useEffect(() => {
     sessionStorage.setItem(draftKey, JSON.stringify({ title, description, urgency, duration, energyLevel, minutes, categoryId, dueDate }))
@@ -62,8 +80,8 @@ export function TaskFormPage() {
       <label className="field-label" htmlFor="title">Was möchtest du erledigen?</label>
       <input id="title" className="title-input" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Aufgabe eingeben …" autoFocus required />
       <label className="field-label" htmlFor="description">Beschreibung / Notizen <small>optional</small></label>
-      <textarea ref={descriptionInput} id="description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Details, Links oder Gedanken …" />
-      <button type="button" className="notes-checklist-add" onClick={() => { setDescription((value) => appendChecklistLine(value)); requestAnimationFrame(() => descriptionInput.current?.focus()) }}><ListPlus /> Checklistenpunkt hinzufügen</button>
+      <textarea ref={descriptionInput} id="description" value={description} onChange={(e) => { setDescription(e.target.value); rememberDescriptionSelection() }} onSelect={rememberDescriptionSelection} onBlur={rememberDescriptionSelection} placeholder="Details, Links oder Gedanken …" />
+      <button type="button" className="notes-checklist-add" onPointerDown={rememberDescriptionSelection} onMouseDown={(event) => event.preventDefault()} onClick={toggleDescriptionChecklist}><ListPlus /> Checklistenpunkt hinzufügen</button>
       <fieldset><legend>Wie dringend ist es?</legend><div className="choice-grid urgency-choices">
         <Choice active={urgency === 'urgent'} onClick={() => setUrgency('urgent')} title="Dringend" subtitle="Sollte bald erledigt werden" tone="urgent" />
         <Choice active={urgency === 'normal'} onClick={() => setUrgency('normal')} title="Normal" subtitle="Wäre gut, es zu erledigen" tone="normal" />

@@ -23,7 +23,7 @@ export function CalendarField({ value, onChange }: { value: string, onChange: (v
 
   useEffect(() => {
     if (!open) return
-    closeButton.current?.focus()
+    closeButton.current?.focus({ preventScroll: true })
     const closeOnEscape = (event: KeyboardEvent) => { if (event.key === 'Escape') setOpen(false) }
     document.addEventListener('keydown', closeOnEscape)
     return () => document.removeEventListener('keydown', closeOnEscape)
