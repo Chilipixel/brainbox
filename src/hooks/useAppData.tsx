@@ -5,6 +5,7 @@ import type { Category, QuickItem, Task } from '../types/models'
 import { categoryRepository, db, quickItemRepository, taskRepository } from '../repositories/localDatabase'
 import { createQuickItem, toggleQuickItemState } from '../domain/quickChecklist'
 import { seedDevelopmentData } from '../repositories/seed'
+import { celebrateTaskCompletion } from '../services/confetti'
 
 interface AppData {
   tasks: Task[]
@@ -40,6 +41,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (!task) return
       const completed = task.status === 'open'
       await taskRepository.save({ ...task, status: completed ? 'completed' : 'open', completedAt: completed ? new Date().toISOString() : undefined, updatedAt: new Date().toISOString() })
+      if (completed) celebrateTaskCompletion()
     },
     saveCategory: (category) => categoryRepository.save(category),
     deleteCategory: async (id, moveTo) => {
