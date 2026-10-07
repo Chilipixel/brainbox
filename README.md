@@ -50,7 +50,7 @@ Die HTTPS-Adresse in einem unterstützten Browser öffnen und im Browsermenü �
 
 ## Datenhaltung und Backups
 
-Aufgaben, Kategorien, Checklisten und Einstellungen werden ausschließlich lokal im Browser gespeichert. Die App verwendet dafür IndexedDB und Local Storage. Es werden keine Aufgabendaten an einen Cloud-Dienst übertragen.
+Aufgaben, Kategorien, Checklisten, Thoughts und Einstellungen werden ausschließlich lokal im Browser gespeichert. Die App verwendet dafür IndexedDB und Local Storage. Es werden keine Inhaltsdaten an einen Cloud-Dienst übertragen.
 
 Unter „Einstellungen“ kann ein vollständiges JSON-Backup exportiert und nach einer Validierung wieder importiert werden. Das Importieren ersetzt nach einer Bestätigung die lokalen Daten. Regelmäßige Exporte schützen vor Datenverlust durch gelöschte Browserdaten oder einen Gerätewechsel.
 

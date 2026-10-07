@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { createBackup, validateBackup } from './backup'
-import type { Category, Task } from '../types/models'
+import type { Category, Task, Thought } from '../types/models'
 
 const category: Category = { id:'c', name:'Privat', icon:'◌', color:'#000', createdAt:'2025-01-01', sortOrder:0 }
 const task: Task = { id:'t', title:'Test', categoryId:'c', urgency:'normal', duration:'short', createdAt:'2025-01-01', updatedAt:'2025-01-01', status:'open' }
@@ -15,7 +15,12 @@ describe('Backup-Validierung', () => {
   })
   it('akzeptiert alte Backups ohne neue optionale Felder', () => {
     const value = createBackup([task], [category])
-    delete value.quickItems
+    value.version = 1; delete value.quickItems; delete value.thoughts
     expect(validateBackup(value)).toBe(true)
+  })
+  it('exportiert und validiert Thoughts sowie Kurznotiz-Reihenfolgen', () => {
+    const thought: Thought = { id:'n', content:'Gedanke', color:'blue', tags:['Idee'], x:20, y:30, zIndex:1, createdAt:'2026-01-01', updatedAt:'2026-01-02' }
+    const value = createBackup([task], [category], [{ id:'q', text:'Kurz', completed:false, createdAt:'2026-01-01', sortOrder:0 }], [thought])
+    expect(value.version).toBe(2); expect(validateBackup(value)).toBe(true); expect(value.thoughts).toEqual([thought])
   })
 })

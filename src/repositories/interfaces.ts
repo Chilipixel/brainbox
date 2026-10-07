@@ -1,10 +1,16 @@
-import type { Category, QuickItem, Task } from '../types/models'
+import type { Category, QuickItem, Task, Thought } from '../types/models'
 
 export interface TaskRepository {
   list(): Promise<Task[]>
   save(task: Task): Promise<void>
   delete(id: string): Promise<void>
   replaceAll(tasks: Task[]): Promise<void>
+}
+
+export interface ThoughtRepository {
+  save(thought: Thought): Promise<void>
+  delete(id: string): Promise<void>
+  replaceAll(thoughts: Thought[]): Promise<void>
 }
 
 export interface CategoryRepository {

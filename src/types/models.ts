@@ -35,12 +35,29 @@ export interface QuickItem {
   text: string
   completed: boolean
   createdAt: string
+  sortOrder?: number
+}
+
+export type ThoughtColor = 'yellow' | 'pink' | 'purple' | 'blue' | 'green' | 'orange'
+
+export interface Thought {
+  id: string
+  title?: string
+  content: string
+  color: ThoughtColor
+  tags: string[]
+  x: number
+  y: number
+  zIndex: number
+  createdAt: string
+  updatedAt: string
 }
 
 export interface BackupData {
-  version: 1
+  version: 1 | 2
   exportedAt: string
   tasks: Task[]
   categories: Category[]
   quickItems?: QuickItem[]
+  thoughts?: Thought[]
 }

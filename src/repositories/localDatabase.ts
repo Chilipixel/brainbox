@@ -1,11 +1,12 @@
 import Dexie, { type EntityTable } from 'dexie'
-import type { Category, QuickItem, Task } from '../types/models'
-import type { CategoryRepository, QuickItemRepository, TaskRepository } from './interfaces'
+import type { Category, QuickItem, Task, Thought } from '../types/models'
+import type { CategoryRepository, QuickItemRepository, TaskRepository, ThoughtRepository } from './interfaces'
 
 export class SinnvollDatabase extends Dexie {
   tasks!: EntityTable<Task, 'id'>
   categories!: EntityTable<Category, 'id'>
   quickItems!: EntityTable<QuickItem, 'id'>
+  thoughts!: EntityTable<Thought, 'id'>
 
   constructor() {
     super('sinnvoll-db')
@@ -32,6 +33,16 @@ export class SinnvollDatabase extends Dexie {
       quickItems: 'id, createdAt',
       syncTombstones: null
     })
+    this.version(5).stores({
+      tasks: 'id, categoryId, urgency, duration, energyLevel, status, dueDate, createdAt, completedAt',
+      categories: 'id, sortOrder, name',
+      quickItems: 'id, sortOrder, createdAt',
+      thoughts: 'id, updatedAt, createdAt, color, *tags'
+    }).upgrade(async (transaction) => {
+      const quickItems = await transaction.table('quickItems').toArray() as QuickItem[]
+      quickItems.sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+      await transaction.table('quickItems').bulkPut(quickItems.map((item, sortOrder) => ({ ...item, sortOrder })))
+    })
   }
 }
 
@@ -56,4 +67,10 @@ export const quickItemRepository: QuickItemRepository = {
   save: async (item) => { await db.quickItems.put(item) },
   deleteCompleted: async () => { await db.quickItems.filter((item) => item.completed).delete() },
   replaceAll: async (items) => { await db.transaction('rw', db.quickItems, async () => { await db.quickItems.clear(); await db.quickItems.bulkPut(items) }) }
+}
+
+export const thoughtRepository: ThoughtRepository = {
+  save: async (thought) => { await db.thoughts.put(thought) },
+  delete: async (id) => { await db.thoughts.delete(id) },
+  replaceAll: async (thoughts) => { await db.transaction('rw', db.thoughts, async () => { await db.thoughts.clear(); await db.thoughts.bulkPut(thoughts) }) }
 }

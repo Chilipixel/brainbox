@@ -14,6 +14,7 @@ import { RandomPage } from './pages/RandomPage'
 import { SettingsPage } from './pages/SettingsPage'
 import { TaskDetailPage } from './pages/TaskDetailPage'
 import { TaskFormPage } from './pages/TaskFormPage'
+import { ThoughtsPage } from './pages/ThoughtsPage'
 
 function App() {
   const { ready } = useAppData()
@@ -23,6 +24,7 @@ function App() {
   return <div className="app-shell"><ScrollToTop /><div className="app-content"><Routes>
     <Route path="/" element={<HomePage />} />
     <Route path="/categories" element={<CategoriesPage />} />
+    <Route path="/thoughts" element={<ThoughtsPage />} />
     <Route path="/category/:id" element={<CategoryDetailPage />} />
     <Route path="/new" element={<TaskFormPage key="new" />} />
     <Route path="/task/:id/edit" element={<TaskFormPage key={pathname} />} />
