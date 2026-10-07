@@ -38,7 +38,7 @@ export interface QuickItem {
   sortOrder?: number
 }
 
-export type ThoughtColor = 'yellow' | 'pink' | 'purple' | 'blue' | 'green' | 'orange'
+export type ThoughtColor = 'yellow' | 'red' | 'pink' | 'purple' | 'blue' | 'green' | 'orange'
 
 export interface Thought {
   id: string
@@ -49,6 +49,9 @@ export interface Thought {
   x: number
   y: number
   zIndex: number
+  manualX?: number
+  manualY?: number
+  manualZIndex?: number
   createdAt: string
   updatedAt: string
 }

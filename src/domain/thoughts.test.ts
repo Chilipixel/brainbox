@@ -17,4 +17,12 @@ describe('Thoughts', () => {
     expect(arranged[0].content).toBe('Neue Pedal-Idee')
     expect(arranged[0].updatedAt).toBe('2026-03-01')
   })
+  it('merkt sich die freie Anordnung und stellt sie nach einer Sortierung wieder her', () => {
+    const original = [thought({ id:'a', x:510, y:320, zIndex:9 }), thought({ id:'b', x:44, y:620, zIndex:3 })]
+    const sorted = arrangeThoughts(original, 'title')
+    const restored = arrangeThoughts(sorted, 'manual')
+    expect(restored.map(({ id, x, y, zIndex }) => ({ id, x, y, zIndex }))).toEqual([
+      { id:'a', x:510, y:320, zIndex:9 }, { id:'b', x:44, y:620, zIndex:3 }
+    ])
+  })
 })
