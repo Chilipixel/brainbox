@@ -1,5 +1,5 @@
 import { GripVertical, Plus, Trash2 } from 'lucide-react'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useAppData } from '../hooks/useAppData'
 
 export function QuickChecklist() {
@@ -10,6 +10,7 @@ export function QuickChecklist() {
   const longPressTimer = useRef<ReturnType<typeof setTimeout>>()
   const gesture = useRef<{ id: string, startX: number, startY: number, active: boolean }>()
   const suppressClick = useRef<string>()
+  const quickItemsRoot = useRef<HTMLDivElement>(null)
   const completedCount = quickItems.filter((item) => item.completed).length
 
   async function add(event: React.FormEvent) {
@@ -36,7 +37,7 @@ export function QuickChecklist() {
   }
 
   function startLongPress(event: React.PointerEvent<HTMLDivElement>, id: string) {
-    if (event.button !== 0) return
+    if (event.pointerType === 'touch' || event.button !== 0) return
     event.preventDefault()
     const element = event.currentTarget
     gesture.current = { id, startX:event.clientX, startY:event.clientY, active:false }
@@ -52,6 +53,7 @@ export function QuickChecklist() {
   }
 
   function moveLongPress(event: React.PointerEvent<HTMLDivElement>, id: string) {
+    if (event.pointerType === 'touch') return
     const current = gesture.current
     if (!current || current.id !== id) return
     if (!current.active) {
@@ -67,6 +69,7 @@ export function QuickChecklist() {
   }
 
   function finishLongPress(event: React.PointerEvent<HTMLDivElement>, id: string) {
+    if (event.pointerType === 'touch') return
     clearLongPress()
     const current = gesture.current
     gesture.current = undefined
@@ -77,7 +80,7 @@ export function QuickChecklist() {
     suppressClick.current = id
     setDragging(undefined)
     if (target && target !== id) void reorderQuickItem(id, target)
-    window.setTimeout(() => { if (suppressClick.current === id) suppressClick.current = undefined }, 0)
+    window.setTimeout(() => { if (suppressClick.current === id) suppressClick.current = undefined }, 400)
   }
 
   function cancelLongPress() {
@@ -86,11 +89,73 @@ export function QuickChecklist() {
     setDragging(undefined)
   }
 
+  useEffect(() => {
+    const root = quickItemsRoot.current
+    if (!root) return
+    const itemId = (target: EventTarget | null) => target instanceof Element ? target.closest<HTMLElement>('.quick-drag-area')?.closest<HTMLElement>('[data-quick-id]')?.dataset.quickId : undefined
+    const start = (event: TouchEvent) => {
+      if (event.touches.length !== 1) return
+      const id = itemId(event.target); const touch = event.touches[0]
+      if (!id || !touch) return
+      clearLongPress()
+      gesture.current = { id, startX:touch.clientX, startY:touch.clientY, active:false }
+      dragTarget.current = id
+      longPressTimer.current = setTimeout(() => {
+        if (gesture.current?.id !== id) return
+        gesture.current.active = true
+        setDragging({ id, x:0, y:0 })
+        navigator.vibrate?.(20)
+      }, 450)
+    }
+    const move = (event: TouchEvent) => {
+      const current = gesture.current; const touch = event.touches[0]
+      if (!current || !touch) return
+      if (!current.active) {
+        if (Math.hypot(touch.clientX-current.startX, touch.clientY-current.startY) > 14) {
+          clearLongPress(); gesture.current = undefined
+        }
+        return
+      }
+      event.preventDefault()
+      setDragging({ id:current.id, x:touch.clientX-current.startX, y:touch.clientY-current.startY })
+      updateDragTarget(touch.clientX, touch.clientY, current.id)
+    }
+    const finish = (event: TouchEvent) => {
+      clearLongPress()
+      const current = gesture.current; const touch = event.changedTouches[0]
+      gesture.current = undefined
+      if (!current?.active) return
+      event.preventDefault()
+      if (touch) updateDragTarget(touch.clientX, touch.clientY, current.id)
+      const target = dragTarget.current
+      suppressClick.current = current.id
+      setDragging(undefined)
+      if (target && target !== current.id) void reorderQuickItem(current.id, target)
+      window.setTimeout(() => { if (suppressClick.current === current.id) suppressClick.current = undefined }, 400)
+    }
+    const cancel = () => {
+      clearLongPress()
+      gesture.current = undefined
+      setDragging(undefined)
+    }
+    root.addEventListener('touchstart', start, { passive:true })
+    root.addEventListener('touchmove', move, { passive:false })
+    root.addEventListener('touchend', finish, { passive:false })
+    root.addEventListener('touchcancel', cancel, { passive:true })
+    return () => {
+      clearLongPress()
+      root.removeEventListener('touchstart', start)
+      root.removeEventListener('touchmove', move)
+      root.removeEventListener('touchend', finish)
+      root.removeEventListener('touchcancel', cancel)
+    }
+  }, [quickItems.length, reorderQuickItem])
+
   return <section className="quick-checklist" aria-labelledby="quick-checklist-title">
     <div className="quick-checklist-heading"><div><span className="eyebrow">Kurz notiert</span><h3 id="quick-checklist-title">Kleine Dinge</h3></div><button type="button" onClick={clearCompletedQuickItems} disabled={!completedCount}><Trash2 /> Erledigte löschen</button></div>
     <form onSubmit={add}><input value={text} onChange={(event) => setText(event.target.value)} placeholder="Was möchtest du kurz festhalten?" aria-label="Neuer Checklisten-Eintrag" /><button aria-label="Eintrag hinzufügen"><Plus /></button></form>
-    {quickItems.length ? <div className="quick-items">{quickItems.map((item) => <div data-quick-id={item.id} key={item.id} className={`quick-item${item.completed ? ' completed' : ''}${dragging?.id === item.id ? ' dragging' : ''}`} style={dragging?.id === item.id ? { transform:`translate3d(${dragging.x}px, ${dragging.y}px, 0)` } : undefined} onClickCapture={(event) => { if (suppressClick.current === item.id) { event.preventDefault(); event.stopPropagation() } }}>
-      <label className="quick-check"><input type="checkbox" checked={item.completed} onChange={() => toggleQuickItem(item.id)} aria-label={`${item.text} erledigt`} /></label><div className="quick-drag-area" tabIndex={0} aria-label={`${item.text}. Zum Sortieren lange gedrückt halten.`} onContextMenu={(event) => event.preventDefault()} onDragStart={(event) => event.preventDefault()} onKeyDown={(event) => { if (!event.altKey) return; if (event.key === 'ArrowUp') { event.preventDefault(); moveWithKeyboard(item.id, -1) } if (event.key === 'ArrowDown') { event.preventDefault(); moveWithKeyboard(item.id, 1) } }} onPointerDown={(event) => startLongPress(event, item.id)} onPointerMove={(event) => moveLongPress(event, item.id)} onPointerUp={(event) => finishLongPress(event, item.id)} onPointerCancel={cancelLongPress}><span>{item.text}</span><GripVertical className="quick-grip" aria-hidden="true" /></div>
+    {quickItems.length ? <div className="quick-items" ref={quickItemsRoot}>{quickItems.map((item) => <div data-quick-id={item.id} key={item.id} className={`quick-item${item.completed ? ' completed' : ''}${dragging?.id === item.id ? ' dragging' : ''}`} style={dragging?.id === item.id ? { transform:`translate3d(${dragging.x}px, ${dragging.y}px, 0)` } : undefined} onClickCapture={(event) => { if (suppressClick.current === item.id) { event.preventDefault(); event.stopPropagation() } }}>
+      <label className="quick-check"><input type="checkbox" checked={item.completed} onChange={() => toggleQuickItem(item.id)} aria-label={`${item.text} erledigt`} /></label><div className="quick-drag-area" tabIndex={0} aria-label={`${item.text}. Zum Sortieren lange gedrückt halten.`} onContextMenu={(event) => event.preventDefault()} onDragStart={(event) => event.preventDefault()} onKeyDown={(event) => { if (!event.altKey) return; if (event.key === 'ArrowUp') { event.preventDefault(); moveWithKeyboard(item.id, -1) } if (event.key === 'ArrowDown') { event.preventDefault(); moveWithKeyboard(item.id, 1) } }} onPointerDown={(event) => startLongPress(event, item.id)} onPointerMove={(event) => moveLongPress(event, item.id)} onPointerUp={(event) => finishLongPress(event, item.id)} onPointerCancel={(event) => { if (event.pointerType !== 'touch') cancelLongPress() }}><span>{item.text}</span><GripVertical className="quick-grip" aria-hidden="true" /></div>
     </div>)}</div> : <p className="quick-empty">Noch nichts notiert.</p>}
   </section>
 }
