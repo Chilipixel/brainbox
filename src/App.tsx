@@ -19,9 +19,10 @@ import { ThoughtsPage } from './pages/ThoughtsPage'
 function App() {
   const { ready } = useAppData()
   const { pathname } = useLocation()
+  const thoughtsWorkspace = pathname.startsWith('/thoughts')
   useWebMcp()
   if (!ready) return <div className="app-loading"><BrandMark /><span>Deine Aufgaben werden vorbereitet …</span></div>
-  return <div className="app-shell"><ScrollToTop /><div className="app-content"><Routes>
+  return <div className={`app-shell${thoughtsWorkspace ? ' thoughts-shell' : ''}`}><ScrollToTop /><div className="app-content"><Routes>
     <Route path="/" element={<HomePage />} />
     <Route path="/categories" element={<CategoriesPage />} />
     <Route path="/thoughts" element={<ThoughtsPage />} />
@@ -34,7 +35,7 @@ function App() {
     <Route path="/completed" element={<CompletedPage />} />
     <Route path="/settings" element={<SettingsPage />} />
     <Route path="*" element={<Navigate to="/" replace />} />
-  </Routes><LegalFooter /></div><BottomNav /></div>
+  </Routes>{!thoughtsWorkspace && <LegalFooter />}</div>{!thoughtsWorkspace && <BottomNav />}</div>
 }
 
 export default App

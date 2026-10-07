@@ -1,4 +1,4 @@
-import { CheckSquare2, Folder, ListTodo, Plus, Shuffle, StickyNote } from 'lucide-react'
+import { CheckSquare2, Folder, ListTodo, Plus, Shuffle } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 
 export function BottomNav() {
@@ -10,7 +10,6 @@ export function BottomNav() {
   return <nav className="bottom-nav" aria-label="Hauptnavigation">
     {item('/', 'Start', CheckSquare2)}
     {item('/categories', 'Kategorien', Folder)}
-    {item('/thoughts', 'Thoughts', StickyNote)}
     <NavLink to="/new" className="add-button" aria-label="Neue Aufgabe"><Plus aria-hidden="true" /></NavLink>
     {item('/all', 'Alle', ListTodo)}
     {item('/random', 'Zufall', Shuffle)}

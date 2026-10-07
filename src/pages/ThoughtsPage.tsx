@@ -1,4 +1,4 @@
-import { Grip, Plus, Search, Trash2, X } from 'lucide-react'
+import { ArrowUpDown, Grip, Plus, Search, Trash2, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { PageHeader } from '../components/PageHeader'
 import { arrangeThoughts, matchesThought, parseTags, thoughtColors, type ThoughtSort } from '../domain/thoughts'
@@ -12,6 +12,7 @@ type Draft = { id?: string, title: string, content: string, color: ThoughtColor,
 export function ThoughtsPage() {
   const { thoughts, saveThought, deleteThought, saveThoughts } = useAppData()
   const [query, setQuery] = useState('')
+  const [searchOpen, setSearchOpen] = useState(false)
   const [draft, setDraft] = useState<Draft>()
   const [dragPosition, setDragPosition] = useState<{ id: string, x: number, y: number }>()
   const scroller = useRef<HTMLDivElement>(null)
@@ -58,11 +59,18 @@ export function ThoughtsPage() {
     await saveThought({ ...thought, x:Math.max(8, Math.min(boardWidth - 228, x)), y:Math.max(8, Math.min(boardHeight - 188, y)), zIndex:maxZ + 1, updatedAt:new Date().toISOString() })
   }
 
-  return <><PageHeader title="Thoughts" action={<button type="button" className="save-top" onClick={openNew}><Plus /> Neu</button>} />
+  function applySort(sort: ThoughtSort) {
+    void saveThoughts(arrangeThoughts(thoughts, sort))
+  }
+
+  async function removeThought() {
+    if (!draft?.id || !window.confirm('Dieses Post-it wirklich löschen?')) return
+    await deleteThought(draft.id)
+    setDraft(undefined)
+  }
+
+  return <><PageHeader title="Thoughts" workspaceSwitch />
     <main className="thoughts-page">
-      <div className="thoughts-toolbar"><label className="thought-search"><Search /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Gedanken und Tags suchen …" aria-label="Thoughts durchsuchen" />{query && <button type="button" onClick={() => setQuery('')} aria-label="Suche löschen"><X /></button>}</label>
-        <label>Wand anordnen<select defaultValue="" aria-label="Post-its sortieren" onChange={(event) => { if (!event.target.value) return; void saveThoughts(arrangeThoughts(thoughts, event.target.value as ThoughtSort)); event.target.value = '' }}><option value="" disabled>Kriterium wählen</option><option value="updated">Zuletzt geändert</option><option value="created">Neu erstellt</option><option value="title">Titel A–Z</option><option value="color">Farbe</option></select></label>
-      </div>
       <div className="thoughts-scroll" ref={scroller} tabIndex={0} aria-label="Thoughts-Pinnwand"><div className="thoughts-board" ref={board} style={{ width:boardWidth, height:boardHeight }}>
         {visible.map((thought) => { const position = dragPosition?.id === thought.id ? dragPosition : thought; return <article key={thought.id} className={`thought-card thought-${thought.color}`} style={{ left:position.x, top:position.y, zIndex:thought.zIndex }} onClick={() => openEdit(thought)}>
           <button type="button" className="thought-drag" aria-label={`${thought.title || 'Post-it'} verschieben`} onClick={(event) => event.stopPropagation()} onKeyDown={(event) => { const step = event.shiftKey ? 2 : 16; if (event.key === 'ArrowLeft') void moveByKeyboard(thought, thought.x-step, thought.y); else if (event.key === 'ArrowRight') void moveByKeyboard(thought, thought.x+step, thought.y); else if (event.key === 'ArrowUp') void moveByKeyboard(thought, thought.x, thought.y-step); else if (event.key === 'ArrowDown') void moveByKeyboard(thought, thought.x, thought.y+step); else return; event.preventDefault() }} onPointerDown={(event) => { event.stopPropagation(); const rect = event.currentTarget.parentElement!.getBoundingClientRect(); drag.current = { id:thought.id, offsetX:event.clientX-rect.left, offsetY:event.clientY-rect.top }; event.currentTarget.setPointerCapture(event.pointerId); setDragPosition({ id:thought.id, x:thought.x, y:thought.y }) }} onPointerMove={(event) => { if (drag.current?.id !== thought.id) return; const next = pointerPosition(event); if (next) setDragPosition({ id:thought.id, ...next }) }} onPointerUp={(event) => { if (drag.current?.id !== thought.id) return; const next = pointerPosition(event) ?? { x:thought.x, y:thought.y }; drag.current=undefined; setDragPosition(undefined); void saveThought({ ...thought, ...next, zIndex:maxZ+1, updatedAt:new Date().toISOString() }) }} onPointerCancel={() => { drag.current=undefined; setDragPosition(undefined) }}><Grip /></button>
@@ -71,12 +79,18 @@ export function ThoughtsPage() {
         {!visible.length && <div className="thoughts-empty">{thoughts.length ? 'Keine passenden Gedanken gefunden.' : 'Deine Wand ist noch leer. Klebe deinen ersten Gedanken auf.'}</div>}
       </div></div>
     </main>
-    {draft && <div className="thought-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setDraft(undefined) }}><form className="thought-modal" onSubmit={submit} role="dialog" aria-modal="true" aria-labelledby="thought-dialog-title"><div className="thought-modal-title"><h2 id="thought-dialog-title">{draft.id ? 'Post-it bearbeiten' : 'Neuer Gedanke'}</h2><button type="button" onClick={() => setDraft(undefined)} aria-label="Schließen"><X /></button></div>
+    <nav className="thoughts-nav" aria-label="Thoughts-Werkzeuge">
+      {searchOpen && <div className="thoughts-search-popover" role="search"><Search /><input autoFocus value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Gedanken und Tags suchen …" aria-label="Thoughts durchsuchen" /><button type="button" onClick={() => { setQuery(''); setSearchOpen(false) }} aria-label="Suche schließen"><X /></button></div>}
+      <button type="button" className={query ? 'active' : ''} onClick={() => setSearchOpen((open) => !open)}><Search /><span>{query ? 'Gefiltert' : 'Suchen'}</span></button>
+      <button type="button" className="thoughts-add" onClick={openNew} aria-label="Neues Post-it"><Plus /></button>
+      <label className="thoughts-sort"><ArrowUpDown /><span>Sortieren</span><select defaultValue="" aria-label="Post-its sortieren" onChange={(event) => { if (!event.target.value) return; applySort(event.target.value as ThoughtSort); event.target.value = '' }}><option value="" disabled>Kriterium wählen</option><option value="updated">Zuletzt geändert</option><option value="created">Neu erstellt</option><option value="title">Titel A–Z</option><option value="color">Farbe</option></select></label>
+    </nav>
+    {draft && <div className="thought-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setDraft(undefined) }}><form className="thought-modal" onSubmit={submit} role="dialog" aria-modal="true" aria-labelledby="thought-dialog-title"><div className="thought-modal-title"><h2 id="thought-dialog-title">{draft.id ? 'Post-it bearbeiten' : 'Neuer Gedanke'}</h2>{draft.id && <button type="button" className="thought-delete-icon" onClick={removeThought} aria-label="Post-it löschen"><Trash2 /></button>}<button type="button" onClick={() => setDraft(undefined)} aria-label="Schließen"><X /></button></div>
       <label>Überschrift <small>optional</small><input value={draft.title} onChange={(event) => setDraft({ ...draft, title:event.target.value })} /></label>
       <label>Inhalt<textarea autoFocus required value={draft.content} onChange={(event) => setDraft({ ...draft, content:event.target.value })} /></label>
       <fieldset><legend>Farbe</legend><div className="thought-colors">{thoughtColors.map((color) => <button key={color} type="button" className={`thought-color thought-${color}${draft.color === color ? ' selected' : ''}`} onClick={() => setDraft({ ...draft, color })} aria-label={`Farbe ${color}`} aria-pressed={draft.color === color} />)}</div></fieldset>
       <label>Tags <small>optional, mit Komma trennen</small><input value={draft.tags} onChange={(event) => setDraft({ ...draft, tags:event.target.value })} placeholder="Idee, später, Zuhause" /></label>
-      <div className="thought-modal-actions">{draft.id && <button type="button" className="thought-delete" onClick={() => { if (window.confirm('Dieses Post-it wirklich löschen?')) { void deleteThought(draft.id!); setDraft(undefined) } }}><Trash2 /> Löschen</button>}<button className="primary-button">Speichern</button></div>
+      <div className="thought-modal-actions"><button className="primary-button">Speichern</button></div>
     </form></div>}
   </>
 }
