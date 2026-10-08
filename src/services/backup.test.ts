@@ -19,7 +19,7 @@ describe('Backup-Validierung', () => {
     expect(validateBackup(value)).toBe(true)
   })
   it('exportiert und validiert Thoughts sowie Kurznotiz-Reihenfolgen', () => {
-    const thought: Thought = { id:'n', content:'Gedanke', color:'blue', tags:['Idee'], x:20, y:30, zIndex:1, collapsed:true, createdAt:'2026-01-01', updatedAt:'2026-01-02' }
+    const thought: Thought = { id:'n', content:'Gedanke', color:'blue', tags:['Idee'], x:20, y:30, zIndex:1, width:260, height:210, collapsed:true, createdAt:'2026-01-01', updatedAt:'2026-01-02' }
     const value = createBackup([task], [category], [{ id:'q', text:'Kurz', completed:false, createdAt:'2026-01-01', sortOrder:0 }], [thought])
     expect(value.version).toBe(2); expect(validateBackup(value)).toBe(true); expect(value.thoughts).toEqual([thought])
   })

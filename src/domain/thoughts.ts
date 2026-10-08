@@ -1,6 +1,13 @@
 import type { Thought } from '../types/models'
 
 export const thoughtColors = ['yellow', 'red', 'pink', 'purple', 'blue', 'green', 'orange'] as const
+export const thoughtSizePresets = [
+  { id:'large', label:'Groß', width:220, height:180 },
+  { id:'medium', label:'Mittel', width:190, height:150 },
+  { id:'small', label:'Klein', width:160, height:125 }
+] as const
+export const defaultThoughtSize = thoughtSizePresets[0]
+export const collapsedThoughtHeight = 60
 
 export function matchesThought(thought: Thought, query: string) {
   const needle = query.trim().toLocaleLowerCase('de-DE')
@@ -24,7 +31,7 @@ export function sortThoughts(thoughts: Thought[], sort: ThoughtSort) {
   })
 }
 
-export function arrangeThoughts(thoughts: Thought[], sort: ThoughtSort, cardSize = { width:220, height:180 }) {
+export function arrangeThoughts(thoughts: Thought[], sort: ThoughtSort) {
   const remembered = thoughts.map((thought) => ({
     ...thought,
     manualX: thought.manualX ?? thought.x,
@@ -32,8 +39,15 @@ export function arrangeThoughts(thoughts: Thought[], sort: ThoughtSort, cardSize
     manualZIndex: thought.manualZIndex ?? thought.zIndex
   }))
   if (sort === 'manual') return remembered.map((thought) => ({ ...thought, x:thought.manualX!, y:thought.manualY!, zIndex:thought.manualZIndex! }))
-  const columns = Math.max(1, Math.floor((1800 - 28) / (cardSize.width + 24)))
-  return sortThoughts(remembered, sort).map((thought, index) => ({ ...thought, x:28 + (index % columns) * (cardSize.width + 24), y:28 + Math.floor(index / columns) * (cardSize.height + 24), zIndex:index + 1 }))
+  let x = 28; let y = 28; let rowHeight = 0
+  return sortThoughts(remembered, sort).map((thought, index) => {
+    const width = thought.width ?? defaultThoughtSize.width
+    const height = thought.collapsed ? collapsedThoughtHeight : thought.height ?? defaultThoughtSize.height
+    if (x > 28 && x + width > 1772) { x = 28; y += rowHeight + 24; rowHeight = 0 }
+    const arranged = { ...thought, x, y, zIndex:index + 1 }
+    x += width + 24; rowHeight = Math.max(rowHeight, height)
+    return arranged
+  })
 }
 
 export function parseTags(value: string) {

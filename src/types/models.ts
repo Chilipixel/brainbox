@@ -52,6 +52,8 @@ export interface Thought {
   manualX?: number
   manualY?: number
   manualZIndex?: number
+  width?: number
+  height?: number
   collapsed?: boolean
   createdAt: string
   updatedAt: string

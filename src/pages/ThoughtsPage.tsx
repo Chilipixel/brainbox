@@ -1,27 +1,27 @@
-import { ArrowUpDown, ChevronDown, ChevronUp, Grip, Plus, Search, Trash2, X } from 'lucide-react'
+import { ArrowUpDown, ChevronDown, ChevronUp, Grip, MoveDiagonal2, Plus, Search, Trash2, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { PageHeader } from '../components/PageHeader'
-import { arrangeThoughts, matchesThought, parseTags, thoughtColors, type ThoughtSort } from '../domain/thoughts'
+import { arrangeThoughts, collapsedThoughtHeight, defaultThoughtSize, matchesThought, parseTags, thoughtColors, thoughtSizePresets, type ThoughtSort } from '../domain/thoughts'
 import { useAppData } from '../hooks/useAppData'
-import { getThoughtSize } from '../services/appearance'
 import type { Thought, ThoughtColor } from '../types/models'
 
 const boardWidth = 1800
 const boardHeight = 1200
-type Draft = { id?: string, title: string, content: string, color: ThoughtColor, tags: string, x: number, y: number, zIndex: number, manualX?: number, manualY?: number, manualZIndex?: number, collapsed?: boolean, createdAt?: string }
+type Draft = { id?: string, title: string, content: string, color: ThoughtColor, tags: string, x: number, y: number, zIndex: number, width: number, height: number, manualX?: number, manualY?: number, manualZIndex?: number, collapsed?: boolean, createdAt?: string }
 const colorLabels: Record<ThoughtColor, string> = { yellow:'Gelb', red:'Rot', pink:'Rosa', purple:'Lila', blue:'Blau', green:'Grün', orange:'Orange' }
 
 export function ThoughtsPage() {
   const { thoughts, saveThought, deleteThought, saveThoughts } = useAppData()
-  const cardSize = getThoughtSize()
   const [query, setQuery] = useState('')
   const [colorFilter, setColorFilter] = useState<ThoughtColor | 'all'>('all')
   const [searchOpen, setSearchOpen] = useState(false)
   const [draft, setDraft] = useState<Draft>()
   const [dragPosition, setDragPosition] = useState<{ id: string, x: number, y: number }>()
+  const [resizeSize, setResizeSize] = useState<{ id: string, width: number, height: number }>()
   const scroller = useRef<HTMLDivElement>(null)
   const board = useRef<HTMLDivElement>(null)
-  const drag = useRef<{ id: string, offsetX: number, offsetY: number, height: number }>()
+  const drag = useRef<{ id: string, offsetX: number, offsetY: number, width: number, height: number }>()
+  const resize = useRef<{ id: string, startX: number, startY: number, width: number, height: number, x: number, y: number }>()
   const visible = thoughts.filter((thought) => matchesThought(thought, query) && (colorFilter === 'all' || thought.color === colorFilter))
   const maxZ = thoughts.reduce((maximum, thought) => Math.max(maximum, thought.zIndex), 0)
 
@@ -34,34 +34,35 @@ export function ThoughtsPage() {
 
   function openNew() {
     const view = scroller.current
-    const x = Math.max(20, Math.min(boardWidth - cardSize.width - 20, (view?.scrollLeft ?? 0) + (view?.clientWidth ?? 440) / 2 - cardSize.width / 2 + (thoughts.length % 4) * 18))
-    const y = Math.max(20, Math.min(boardHeight - cardSize.height - 20, (view?.scrollTop ?? 0) + (view?.clientHeight ?? 500) / 2 - cardSize.height / 2 + (thoughts.length % 4) * 18))
-    setDraft({ title:'', content:'', color:'yellow', tags:'', x, y, zIndex:maxZ + 1, collapsed:false })
+    const x = Math.max(20, Math.min(boardWidth - defaultThoughtSize.width - 20, (view?.scrollLeft ?? 0) + (view?.clientWidth ?? 440) / 2 - defaultThoughtSize.width / 2 + (thoughts.length % 4) * 18))
+    const y = Math.max(20, Math.min(boardHeight - defaultThoughtSize.height - 20, (view?.scrollTop ?? 0) + (view?.clientHeight ?? 500) / 2 - defaultThoughtSize.height / 2 + (thoughts.length % 4) * 18))
+    setDraft({ title:'', content:'', color:'yellow', tags:'', x, y, zIndex:maxZ + 1, width:defaultThoughtSize.width, height:defaultThoughtSize.height, collapsed:false })
   }
 
   function openEdit(thought: Thought) {
     const front = { ...thought, zIndex:maxZ + 1 }
     void saveThought(front)
-    setDraft({ ...front, title:front.title ?? '', tags:front.tags.join(', ') })
+    setDraft({ ...front, title:front.title ?? '', tags:front.tags.join(', '), width:front.width ?? defaultThoughtSize.width, height:front.height ?? defaultThoughtSize.height })
   }
 
   async function submit(event: React.FormEvent) {
     event.preventDefault()
     if (!draft?.content.trim()) return
     const now = new Date().toISOString()
-    await saveThought({ id:draft.id ?? crypto.randomUUID(), title:draft.title.trim() || undefined, content:draft.content.trim(), color:draft.color, tags:parseTags(draft.tags), x:draft.x, y:draft.y, zIndex:draft.zIndex, manualX:draft.manualX ?? draft.x, manualY:draft.manualY ?? draft.y, manualZIndex:draft.manualZIndex ?? draft.zIndex, collapsed:draft.collapsed ?? false, createdAt:draft.createdAt ?? now, updatedAt:now })
+    await saveThought({ id:draft.id ?? crypto.randomUUID(), title:draft.title.trim() || undefined, content:draft.content.trim(), color:draft.color, tags:parseTags(draft.tags), x:draft.x, y:draft.y, zIndex:draft.zIndex, width:draft.width, height:draft.height, manualX:draft.manualX ?? draft.x, manualY:draft.manualY ?? draft.y, manualZIndex:draft.manualZIndex ?? draft.zIndex, collapsed:draft.collapsed ?? false, createdAt:draft.createdAt ?? now, updatedAt:now })
     setDraft(undefined)
   }
 
   function pointerPosition(event: React.PointerEvent) {
     const rect = board.current?.getBoundingClientRect()
     if (!rect || !drag.current) return
-    return { x:Math.max(8, Math.min(boardWidth - cardSize.width - 8, event.clientX - rect.left - drag.current.offsetX)), y:Math.max(8, Math.min(boardHeight - drag.current.height - 8, event.clientY - rect.top - drag.current.offsetY)) }
+    return { x:Math.max(8, Math.min(boardWidth - drag.current.width - 8, event.clientX - rect.left - drag.current.offsetX)), y:Math.max(8, Math.min(boardHeight - drag.current.height - 8, event.clientY - rect.top - drag.current.offsetY)) }
   }
 
   async function moveByKeyboard(thought: Thought, x: number, y: number) {
-    const height = thought.collapsed ? cardSize.collapsedHeight : cardSize.height
-    const nextX = Math.max(8, Math.min(boardWidth - cardSize.width - 8, x)); const nextY = Math.max(8, Math.min(boardHeight - height - 8, y)); const nextZ = maxZ + 1
+    const width = thought.width ?? defaultThoughtSize.width
+    const height = thought.collapsed ? collapsedThoughtHeight : thought.height ?? defaultThoughtSize.height
+    const nextX = Math.max(8, Math.min(boardWidth - width - 8, x)); const nextY = Math.max(8, Math.min(boardHeight - height - 8, y)); const nextZ = maxZ + 1
     await saveThought({ ...thought, x:nextX, y:nextY, zIndex:nextZ, manualX:nextX, manualY:nextY, manualZIndex:nextZ, updatedAt:new Date().toISOString() })
   }
 
@@ -70,7 +71,7 @@ export function ThoughtsPage() {
   }
 
   function applySort(sort: ThoughtSort) {
-    void saveThoughts(arrangeThoughts(thoughts, sort, cardSize))
+    void saveThoughts(arrangeThoughts(thoughts, sort))
   }
 
   async function removeThought() {
@@ -82,9 +83,10 @@ export function ThoughtsPage() {
   return <><PageHeader title="Thoughts" workspaceSwitch />
     <main className="thoughts-page">
       <div className="thoughts-scroll" ref={scroller} tabIndex={0} aria-label="Thoughts-Pinnwand"><div className="thoughts-board" ref={board} style={{ width:boardWidth, height:boardHeight }}>
-        {visible.map((thought) => { const position = dragPosition?.id === thought.id ? dragPosition : thought; return <article key={thought.id} className={`thought-card thought-${thought.color}${thought.collapsed ? ' is-collapsed' : ''}`} style={{ left:position.x, top:position.y, zIndex:thought.zIndex }} onClick={() => openEdit(thought)}>
+        {visible.map((thought) => { const position = dragPosition?.id === thought.id ? dragPosition : thought; const size = resizeSize?.id === thought.id ? resizeSize : { width:thought.width ?? defaultThoughtSize.width, height:thought.height ?? defaultThoughtSize.height }; return <article key={thought.id} className={`thought-card thought-${thought.color}${thought.collapsed ? ' is-collapsed' : ''}`} style={{ left:position.x, top:position.y, width:size.width, height:thought.collapsed ? collapsedThoughtHeight : size.height, zIndex:thought.zIndex }} onClick={() => openEdit(thought)}>
           {thought.collapsed ? <button type="button" className="thought-collapsed-title" aria-label={`${thought.title || 'Post-it'} ausklappen`} aria-expanded={false} onClick={(event) => { event.stopPropagation(); void toggleCollapsed(thought) }}><span>{thought.title || 'Ohne Überschrift'}</span><ChevronDown /></button> : <button type="button" className="thought-toggle" aria-label={`${thought.title || 'Post-it'} einklappen`} aria-expanded={true} onClick={(event) => { event.stopPropagation(); void toggleCollapsed(thought) }}><ChevronUp /></button>}
-          <button type="button" className="thought-drag" aria-label={`${thought.title || 'Post-it'} verschieben`} onClick={(event) => event.stopPropagation()} onKeyDown={(event) => { const step = event.shiftKey ? 2 : 16; if (event.key === 'ArrowLeft') void moveByKeyboard(thought, thought.x-step, thought.y); else if (event.key === 'ArrowRight') void moveByKeyboard(thought, thought.x+step, thought.y); else if (event.key === 'ArrowUp') void moveByKeyboard(thought, thought.x, thought.y-step); else if (event.key === 'ArrowDown') void moveByKeyboard(thought, thought.x, thought.y+step); else return; event.preventDefault() }} onPointerDown={(event) => { event.stopPropagation(); const rect = event.currentTarget.parentElement!.getBoundingClientRect(); drag.current = { id:thought.id, offsetX:event.clientX-rect.left, offsetY:event.clientY-rect.top, height:thought.collapsed ? cardSize.collapsedHeight : cardSize.height }; event.currentTarget.setPointerCapture(event.pointerId); setDragPosition({ id:thought.id, x:thought.x, y:thought.y }) }} onPointerMove={(event) => { if (drag.current?.id !== thought.id) return; const next = pointerPosition(event); if (next) setDragPosition({ id:thought.id, ...next }) }} onPointerUp={(event) => { if (drag.current?.id !== thought.id) return; const next = pointerPosition(event) ?? { x:thought.x, y:thought.y }; const nextZ=maxZ+1; drag.current=undefined; setDragPosition(undefined); void saveThought({ ...thought, ...next, zIndex:nextZ, manualX:next.x, manualY:next.y, manualZIndex:nextZ, updatedAt:new Date().toISOString() }) }} onPointerCancel={() => { drag.current=undefined; setDragPosition(undefined) }}><Grip /></button>
+          <button type="button" className="thought-drag" aria-label={`${thought.title || 'Post-it'} verschieben`} onClick={(event) => event.stopPropagation()} onKeyDown={(event) => { const step = event.shiftKey ? 2 : 16; if (event.key === 'ArrowLeft') void moveByKeyboard(thought, thought.x-step, thought.y); else if (event.key === 'ArrowRight') void moveByKeyboard(thought, thought.x+step, thought.y); else if (event.key === 'ArrowUp') void moveByKeyboard(thought, thought.x, thought.y-step); else if (event.key === 'ArrowDown') void moveByKeyboard(thought, thought.x, thought.y+step); else return; event.preventDefault() }} onPointerDown={(event) => { event.stopPropagation(); const rect = event.currentTarget.parentElement!.getBoundingClientRect(); drag.current = { id:thought.id, offsetX:event.clientX-rect.left, offsetY:event.clientY-rect.top, width:size.width, height:thought.collapsed ? collapsedThoughtHeight : size.height }; event.currentTarget.setPointerCapture(event.pointerId); setDragPosition({ id:thought.id, x:thought.x, y:thought.y }) }} onPointerMove={(event) => { if (drag.current?.id !== thought.id) return; const next = pointerPosition(event); if (next) setDragPosition({ id:thought.id, ...next }) }} onPointerUp={(event) => { if (drag.current?.id !== thought.id) return; const next = pointerPosition(event) ?? { x:thought.x, y:thought.y }; const nextZ=maxZ+1; drag.current=undefined; setDragPosition(undefined); void saveThought({ ...thought, ...next, zIndex:nextZ, manualX:next.x, manualY:next.y, manualZIndex:nextZ, updatedAt:new Date().toISOString() }) }} onPointerCancel={() => { drag.current=undefined; setDragPosition(undefined) }}><Grip /></button>
+          {!thought.collapsed && <button type="button" className="thought-resize" aria-label={`${thought.title || 'Post-it'} Größe ändern`} onClick={(event) => event.stopPropagation()} onPointerDown={(event) => { event.stopPropagation(); resize.current = { id:thought.id, startX:event.clientX, startY:event.clientY, width:size.width, height:size.height, x:thought.x, y:thought.y }; event.currentTarget.setPointerCapture(event.pointerId); setResizeSize({ id:thought.id, width:size.width, height:size.height }) }} onPointerMove={(event) => { if (resize.current?.id !== thought.id) return; const width=Math.max(150,Math.min(boardWidth-resize.current.x-8,resize.current.width+event.clientX-resize.current.startX)); const height=Math.max(100,Math.min(boardHeight-resize.current.y-8,resize.current.height+event.clientY-resize.current.startY)); setResizeSize({ id:thought.id, width, height }) }} onPointerUp={(event) => { if (resize.current?.id !== thought.id) return; const width=Math.max(150,Math.min(boardWidth-resize.current.x-8,resize.current.width+event.clientX-resize.current.startX)); const height=Math.max(100,Math.min(boardHeight-resize.current.y-8,resize.current.height+event.clientY-resize.current.startY)); resize.current=undefined; setResizeSize(undefined); void saveThought({ ...thought, width, height }) }} onPointerCancel={() => { resize.current=undefined; setResizeSize(undefined) }}><MoveDiagonal2 /></button>}
           {!thought.collapsed && <>{thought.title && <h2>{thought.title}</h2>}<p>{thought.content}</p>{thought.tags.length > 0 && <div className="thought-tags">{thought.tags.map((tag) => <span key={tag}>#{tag}</span>)}</div>}</>}
         </article> })}
         {!visible.length && <div className="thoughts-empty">{thoughts.length ? 'Keine passenden Gedanken gefunden.' : 'Deine Wand ist noch leer. Klebe deinen ersten Gedanken auf.'}</div>}
@@ -99,6 +101,7 @@ export function ThoughtsPage() {
     {draft && <div className="thought-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setDraft(undefined) }}><form className="thought-modal" onSubmit={submit} role="dialog" aria-modal="true" aria-labelledby="thought-dialog-title"><div className="thought-modal-title"><h2 id="thought-dialog-title">{draft.id ? 'Post-it bearbeiten' : 'Neuer Gedanke'}</h2>{draft.id && <button type="button" className="thought-delete-icon" onClick={removeThought} aria-label="Post-it löschen"><Trash2 /></button>}<button type="button" onClick={() => setDraft(undefined)} aria-label="Schließen"><X /></button></div>
       <label>Überschrift <small>optional</small><input value={draft.title} onChange={(event) => setDraft({ ...draft, title:event.target.value })} /></label>
       <label>Inhalt<textarea autoFocus required value={draft.content} onChange={(event) => setDraft({ ...draft, content:event.target.value })} /></label>
+      <fieldset><legend>Startgröße</legend><div className="thought-preset-options">{thoughtSizePresets.map((preset) => <button type="button" key={preset.id} className={draft.width === preset.width && draft.height === preset.height ? 'selected' : ''} onClick={() => setDraft({ ...draft, width:preset.width, height:preset.height })} aria-pressed={draft.width === preset.width && draft.height === preset.height}><span className={`thought-size-preview size-${preset.id}`} /><span>{preset.label}</span></button>)}</div><small className="thought-size-help">Auf der Pinnwand kannst du den Zettel danach unten rechts frei größer oder kleiner ziehen.</small></fieldset>
       <fieldset><legend>Farbe</legend><div className="thought-colors">{thoughtColors.map((color) => <button key={color} type="button" className={`thought-color thought-${color}${draft.color === color ? ' selected' : ''}`} onClick={() => setDraft({ ...draft, color })} aria-label={`Farbe ${color}`} aria-pressed={draft.color === color} />)}</div></fieldset>
       <label>Tags <small>optional, mit Komma trennen</small><input value={draft.tags} onChange={(event) => setDraft({ ...draft, tags:event.target.value })} placeholder="Idee, später, Zuhause" /></label>
       <div className="thought-modal-actions"><button className="primary-button">Speichern</button></div>

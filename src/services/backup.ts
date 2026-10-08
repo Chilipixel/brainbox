@@ -37,7 +37,7 @@ function validThought(value: unknown): value is Thought {
     && ['yellow', 'red', 'pink', 'purple', 'blue', 'green', 'orange'].includes(String(v.color))
     && Array.isArray(v.tags) && v.tags.every(isString)
     && ['x', 'y', 'zIndex'].every((key) => typeof v[key] === 'number' && Number.isFinite(v[key]))
-    && ['manualX', 'manualY', 'manualZIndex'].every((key) => v[key] === undefined || (typeof v[key] === 'number' && Number.isFinite(v[key])))
+    && ['manualX', 'manualY', 'manualZIndex', 'width', 'height'].every((key) => v[key] === undefined || (typeof v[key] === 'number' && Number.isFinite(v[key])))
     && (v.collapsed === undefined || typeof v.collapsed === 'boolean')
 }
 

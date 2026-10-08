@@ -26,8 +26,8 @@ describe('Thoughts', () => {
     ])
     expect(restored[0].collapsed).toBe(true)
   })
-  it('passt das Sortierraster an die globale Post-it-Größe an', () => {
-    const arranged = arrangeThoughts([thought({ id:'a' }), thought({ id:'b' })], 'created', { width:160, height:125 })
+  it('passt das Sortierraster an die individuellen Post-it-Größen an', () => {
+    const arranged = arrangeThoughts([thought({ id:'a', width:160, height:125 }), thought({ id:'b', width:160, height:125 })], 'created')
     expect(arranged.map(({ x, y }) => ({ x, y }))).toEqual([{ x:28, y:28 }, { x:212, y:28 }])
   })
 })
