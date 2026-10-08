@@ -17,11 +17,19 @@ export const boardOptions = [
   { id:'plum', label:'Pflaume', color:'#806781', edge:'#6d586f', dot:'#453447' }
 ] as const
 
+export const thoughtSizeOptions = [
+  { id:'large', label:'Groß', width:220, height:180, collapsedHeight:60 },
+  { id:'medium', label:'Mittel', width:190, height:150, collapsedHeight:58 },
+  { id:'small', label:'Klein', width:160, height:125, collapsedHeight:56 }
+] as const
+
 export type AccentId = typeof accentOptions[number]['id']
 export type BoardId = typeof boardOptions[number]['id']
+export type ThoughtSizeId = typeof thoughtSizeOptions[number]['id']
 
 const accentKey = 'appearance-accent'
 const boardKey = 'appearance-thought-board'
+const thoughtSizeKey = 'appearance-thought-size'
 
 export function getAccentId(): AccentId {
   const value = localStorage.getItem(accentKey)
@@ -31,6 +39,15 @@ export function getAccentId(): AccentId {
 export function getBoardId(): BoardId {
   const value = localStorage.getItem(boardKey)
   return boardOptions.some((option) => option.id === value) ? value as BoardId : 'cork'
+}
+
+export function getThoughtSizeId(): ThoughtSizeId {
+  const value = localStorage.getItem(thoughtSizeKey)
+  return thoughtSizeOptions.some((option) => option.id === value) ? value as ThoughtSizeId : 'large'
+}
+
+export function getThoughtSize(id = getThoughtSizeId()) {
+  return thoughtSizeOptions.find((option) => option.id === id) ?? thoughtSizeOptions[0]
 }
 
 export function applyAccent(id: AccentId, persist = true) {
@@ -55,7 +72,13 @@ export function applyBoard(id: BoardId, persist = true) {
   if (persist) localStorage.setItem(boardKey, id)
 }
 
+export function applyThoughtSize(id: ThoughtSizeId, persist = true) {
+  document.documentElement.dataset.thoughtSize = id
+  if (persist) localStorage.setItem(thoughtSizeKey, id)
+}
+
 export function applyStoredAppearance() {
   applyAccent(getAccentId(), false)
   applyBoard(getBoardId(), false)
+  applyThoughtSize(getThoughtSizeId(), false)
 }

@@ -18,11 +18,16 @@ describe('Thoughts', () => {
     expect(arranged[0].updatedAt).toBe('2026-03-01')
   })
   it('merkt sich die freie Anordnung und stellt sie nach einer Sortierung wieder her', () => {
-    const original = [thought({ id:'a', x:510, y:320, zIndex:9 }), thought({ id:'b', x:44, y:620, zIndex:3 })]
+    const original = [thought({ id:'a', x:510, y:320, zIndex:9, collapsed:true }), thought({ id:'b', x:44, y:620, zIndex:3 })]
     const sorted = arrangeThoughts(original, 'title')
     const restored = arrangeThoughts(sorted, 'manual')
     expect(restored.map(({ id, x, y, zIndex }) => ({ id, x, y, zIndex }))).toEqual([
       { id:'a', x:510, y:320, zIndex:9 }, { id:'b', x:44, y:620, zIndex:3 }
     ])
+    expect(restored[0].collapsed).toBe(true)
+  })
+  it('passt das Sortierraster an die globale Post-it-Größe an', () => {
+    const arranged = arrangeThoughts([thought({ id:'a' }), thought({ id:'b' })], 'created', { width:160, height:125 })
+    expect(arranged.map(({ x, y }) => ({ x, y }))).toEqual([{ x:28, y:28 }, { x:212, y:28 }])
   })
 })

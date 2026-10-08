@@ -24,7 +24,7 @@ export function sortThoughts(thoughts: Thought[], sort: ThoughtSort) {
   })
 }
 
-export function arrangeThoughts(thoughts: Thought[], sort: ThoughtSort) {
+export function arrangeThoughts(thoughts: Thought[], sort: ThoughtSort, cardSize = { width:220, height:180 }) {
   const remembered = thoughts.map((thought) => ({
     ...thought,
     manualX: thought.manualX ?? thought.x,
@@ -32,7 +32,8 @@ export function arrangeThoughts(thoughts: Thought[], sort: ThoughtSort) {
     manualZIndex: thought.manualZIndex ?? thought.zIndex
   }))
   if (sort === 'manual') return remembered.map((thought) => ({ ...thought, x:thought.manualX!, y:thought.manualY!, zIndex:thought.manualZIndex! }))
-  return sortThoughts(remembered, sort).map((thought, index) => ({ ...thought, x:28 + (index % 7) * 244, y:28 + Math.floor(index / 7) * 204, zIndex:index + 1 }))
+  const columns = Math.max(1, Math.floor((1800 - 28) / (cardSize.width + 24)))
+  return sortThoughts(remembered, sort).map((thought, index) => ({ ...thought, x:28 + (index % columns) * (cardSize.width + 24), y:28 + Math.floor(index / columns) * (cardSize.height + 24), zIndex:index + 1 }))
 }
 
 export function parseTags(value: string) {
