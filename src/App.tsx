@@ -1,7 +1,6 @@
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { BottomNav } from './components/BottomNav'
 import { BrandMark } from './components/BrandMark'
-import { LegalFooter } from './components/LegalFooter'
 import { ScrollToTop } from './components/ScrollToTop'
 import { useAppData } from './hooks/useAppData'
 import { useWebMcp } from './hooks/useWebMcp'
@@ -35,7 +34,7 @@ function App() {
     <Route path="/completed" element={<CompletedPage />} />
     <Route path="/settings" element={<SettingsPage />} />
     <Route path="*" element={<Navigate to="/" replace />} />
-  </Routes>{!thoughtsWorkspace && <LegalFooter />}</div>{!thoughtsWorkspace && <BottomNav />}</div>
+  </Routes></div>{!thoughtsWorkspace && <BottomNav />}</div>
 }
 
 export default App

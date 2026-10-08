@@ -4,10 +4,12 @@ import { HashRouter } from 'react-router-dom'
 import { registerSW } from 'virtual:pwa-register'
 import App from './App'
 import { AppProvider } from './hooks/useAppData'
+import { applyStoredAppearance } from './services/appearance'
 import './styles/global.css'
 
 registerSW({ immediate: true })
 document.documentElement.dataset.theme = localStorage.getItem('theme') || 'system'
+applyStoredAppearance()
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
